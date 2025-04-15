@@ -16,6 +16,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("Reading from {}", path.display());
 
     let contents = std::fs::read_to_string(path)?;
+    let program = ast::Program::parse(&contents).unwrap_or_else(|err| {
+        eprintln!("Failed to parse: {err:?}");
+        std::process::exit(2)
+    });
+    println!("Parsed to: {program:#?}");
 
     Ok(())
 }

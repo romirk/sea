@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct Program {
     pub declarations: Vec<Declaration>,
 }
@@ -14,6 +15,7 @@ impl Program {
     }
 }
 
+#[derive(Debug)]
 pub struct Declaration {
     pub type_: Type,
     pub id: Id,
@@ -26,6 +28,7 @@ impl Declaration {
     }
 }
 
+#[derive(Debug)]
 pub enum Type {
     Int,
     Char,
@@ -37,6 +40,7 @@ impl Type {
     }
 }
 
+#[derive(Debug)]
 pub struct Id {
     pub name: String,
 }
@@ -47,6 +51,7 @@ impl Id {
     }
 }
 
+#[derive(Debug)]
 pub struct Body {
     pub stmt: CompoundStmt,
 }
@@ -57,6 +62,7 @@ impl Body {
     }
 }
 
+#[derive(Debug)]
 pub struct CompoundStmt {
     pub stmts: Vec<MaybeCompoundStmt>,
 }
@@ -67,6 +73,7 @@ impl CompoundStmt {
     }
 }
 
+#[derive(Debug)]
 pub enum MaybeCompoundStmt {
     Stmt(Stmt),
     CompoundStmt(CompoundStmt),
@@ -78,6 +85,7 @@ impl MaybeCompoundStmt {
     }
 }
 
+#[derive(Debug)]
 pub enum Stmt {
     Expr(Expr),
     Nothing,
@@ -89,6 +97,7 @@ impl Stmt {
     }
 }
 
+#[derive(Debug)]
 pub struct Expr {}
 
 impl Expr {
@@ -98,4 +107,5 @@ impl Expr {
 }
 
 /// Parsing failed.
+#[derive(Debug)]
 pub struct ParseError;
