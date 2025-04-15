@@ -1,5 +1,7 @@
-use std::{env::args_os, path::PathBuf};
 use std::error::Error;
+use std::{env::args_os, path::PathBuf};
+
+mod ast;
 
 fn main() -> Result<(), Box<dyn Error>> {
     // The path to the source file.
