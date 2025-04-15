@@ -80,7 +80,32 @@ pub struct Id {
 
 impl Id {
     pub fn parse(input: &str) -> Result<(Self, &str), ParseError> {
-        todo!()
+        let mut chars = input.char_indices();
+
+        // Check the first character.
+        // An identifier contains at least one character.
+        let (_, first) = chars.next().ok_or(ParseError)?;
+        if !first.is_ascii_alphabetic() && first != '_' {
+            // Invalid first character.
+            return Err(ParseError);
+        }
+
+        // Find the first invalid character; this terminates the identifier.
+        let first_invalid = chars.find(|&(_, c)| !c.is_ascii_alphanumeric() && c != '_');
+
+        // Find the offset of this invalid character.
+        // If we ran out of input, then we use the whole length of the string.
+        let invalid_offset = first_invalid.map_or(input.len(), |(offset, _)| offset);
+
+        // Split the input at this point.
+        let (input, rest) = input.split_at(invalid_offset);
+
+        // Create the new 'Id'.
+        let this = Self {
+            name: input.to_string(),
+        };
+
+        Ok((this, rest.trim_ascii_start()))
     }
 }
 
