@@ -29,7 +29,7 @@ impl Declaration {
         (id, input) = Id::parse(input)?;
 
         if let Some(tail) = input.strip_prefix(";") {
-            input = tail;
+            input = tail.trim_ascii_start();
             return Ok((
                 Self {
                     type_,
@@ -63,10 +63,10 @@ pub enum Type {
 impl Type {
     pub fn parse(mut input: &str) -> Result<(Self, &str), ParseError> {
         if let Some(tail) = input.strip_prefix("int") {
-            input = tail;
+            input = tail.trim_ascii_start();
             return Ok((Self::Int, input));
         } else if let Some(tail) = input.strip_prefix("char") {
-            input = tail;
+            input = tail.trim_ascii_start();
             return Ok((Self::Char, input));
         }
         Err(ParseError)
@@ -117,11 +117,11 @@ pub struct CompoundStmt {
 impl CompoundStmt {
     pub fn parse(mut input: &str) -> Result<(Self, &str), ParseError> {
         let mut stmts = Vec::new();
-        input = input.strip_prefix("{").ok_or(ParseError)?;
+        input = input.strip_prefix("{").ok_or(ParseError)?.trim_ascii_start();
 
         loop {
             if let Some(tail) = input.strip_prefix("}") {
-                input = tail;
+                input = tail.trim_ascii_start();
                 break;
             }
 
@@ -141,7 +141,7 @@ pub enum MaybeCompoundStmt {
 
 impl MaybeCompoundStmt {
     pub fn parse(mut input: &str) -> Result<(Self, &str), ParseError> {
-        input = input.strip_prefix(";").ok_or(ParseError)?;
+        input = input.strip_prefix(";").ok_or(ParseError)?.trim_ascii_start();
         Ok((Self::Stmt(Stmt::Expr(Expr {})), input))
     }
 }
