@@ -1,9 +1,8 @@
 PROGRAM = DECLARATION*
 // TODO param list for function decls
-DECLARATION = TYPE ID (BODY | ";")
+DECLARATION = TYPE ID (COMPOUND_STMT | ";")
 TYPE = "int" | "char"
 ID = [A-Za-z_][A-Za-z0-9_]*
-BODY = COMPOUND_STMT
 COMPOUND_STMT = "{" (STMT | COMPOUND_STMT)* "}"
 STMT = EXPR ";"
 EXPR = <blank>

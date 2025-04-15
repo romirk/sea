@@ -19,7 +19,7 @@ impl Program {
 pub struct Declaration {
     pub type_: Type,
     pub id: Id,
-    pub body: Option<Body>,
+    pub body: Option<CompoundStmt>,
 }
 
 impl Declaration {
@@ -42,7 +42,7 @@ impl Declaration {
 
         // TODO param list for function decls
 
-        (body, input) = Body::parse(input)?;
+        (body, input) = CompoundStmt::parse(input)?;
         Ok((
             Self {
                 type_,
@@ -110,24 +110,26 @@ impl Id {
 }
 
 #[derive(Debug)]
-pub struct Body {
-    pub stmt: CompoundStmt,
-}
-
-impl Body {
-    pub fn parse(input: &str) -> Result<(Self, &str), ParseError> {
-        todo!()
-    }
-}
-
-#[derive(Debug)]
 pub struct CompoundStmt {
     pub stmts: Vec<MaybeCompoundStmt>,
 }
 
 impl CompoundStmt {
-    pub fn parse(input: &str) -> Result<Self, ParseError> {
-        todo!()
+    pub fn parse(mut input: &str) -> Result<(Self, &str), ParseError> {
+        let mut stmts = Vec::new();
+        input = input.strip_prefix("{").ok_or(ParseError)?;
+
+        loop {
+            if let Some(tail) = input.strip_prefix("}") {
+                input = tail;
+                break;
+            }
+
+            let stmt;
+            (stmt, input) = MaybeCompoundStmt::parse(input)?;
+            stmts.push(stmt);
+        }
+        Ok((Self { stmts }, input))
     }
 }
 
@@ -138,8 +140,9 @@ pub enum MaybeCompoundStmt {
 }
 
 impl MaybeCompoundStmt {
-    pub fn parse(input: &str) -> Result<Self, ParseError> {
-        todo!()
+    pub fn parse(mut input: &str) -> Result<(Self, &str), ParseError> {
+        input = input.strip_prefix(";").ok_or(ParseError)?;
+        Ok((Self::Stmt(Stmt::Expr(Expr {})), input))
     }
 }
 
