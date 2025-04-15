@@ -5,3 +5,4 @@ ID = [A-Za-z_][A-Za-z0-9_]*
 BODY = COMPOUND_STMT
 COMPOUND_STMT = { (STMT | COMPOUND_STMT)* }
 STMT = EXPR;
+EXPR = <blank>
