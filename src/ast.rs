@@ -4,14 +4,14 @@ pub struct Program {
 }
 
 impl Program {
-    pub fn parse(mut input: &str) -> Result<(Self, &str), ParseError> {
+    pub fn parse(mut input: &str) -> Result<(Self), ParseError> {
         let mut declarations = Vec::new();
         while !input.is_empty() {
             let declaration;
             (declaration, input) = Declaration::parse(input)?;
             declarations.push(declaration);
         }
-        Ok((Self { declarations }, input))
+        Ok(Self { declarations })
     }
 }
 
@@ -23,8 +23,32 @@ pub struct Declaration {
 }
 
 impl Declaration {
-    pub fn parse(input: &str) -> Result<(Self, &str), ParseError> {
-        todo!()
+    pub fn parse(mut input: &str) -> Result<(Self, &str), ParseError> {
+        let (type_, id, body);
+        (type_, input) = Type::parse(input)?;
+        (id, input) = Id::parse(input)?;
+
+        if let Some(tail) = input.strip_prefix(";") {
+            input = tail;
+            return Ok((
+                Self {
+                    type_,
+                    id,
+                    body: None,
+                },
+                input,
+            ));
+        }
+
+        (body, input) = Body::parse(input)?;
+        Ok((
+            Self {
+                type_,
+                id,
+                body: Some(body),
+            },
+            input,
+        ))
     }
 }
 
@@ -35,7 +59,7 @@ pub enum Type {
 }
 
 impl Type {
-    pub fn parse(input: &str) -> Result<Self, ParseError> {
+    pub fn parse(input: &str) -> Result<(Self, &str), ParseError> {
         todo!()
     }
 }
@@ -46,7 +70,7 @@ pub struct Id {
 }
 
 impl Id {
-    pub fn parse(input: &str) -> Result<Self, ParseError> {
+    pub fn parse(input: &str) -> Result<(Self, &str), ParseError> {
         todo!()
     }
 }
@@ -57,7 +81,7 @@ pub struct Body {
 }
 
 impl Body {
-    pub fn parse(input: &str) -> Result<Self, ParseError> {
+    pub fn parse(input: &str) -> Result<(Self, &str), ParseError> {
         todo!()
     }
 }
