@@ -40,6 +40,8 @@ impl Declaration {
             ));
         }
 
+        // TODO param list for function decls
+
         (body, input) = Body::parse(input)?;
         Ok((
             Self {
@@ -59,8 +61,15 @@ pub enum Type {
 }
 
 impl Type {
-    pub fn parse(input: &str) -> Result<(Self, &str), ParseError> {
-        todo!()
+    pub fn parse(mut input: &str) -> Result<(Self, &str), ParseError> {
+        if let Some(tail) = input.strip_prefix("int") {
+            input = tail;
+            return Ok((Self::Int, input));
+        } else if let Some(tail) = input.strip_prefix("char") {
+            input = tail;
+            return Ok((Self::Char, input));
+        }
+        Err(ParseError)
     }
 }
 
