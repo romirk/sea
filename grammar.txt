@@ -1,8 +1,9 @@
-PROGRAM = DECLARATION*
-// TODO param list for function decls
-DECLARATION = TYPE ID (COMPOUND_STMT | ";")
+PROGRAM = DECL_STMT*
+DECL_STMT = DECL (BLOCK | ";")
+DECL = TYPE ID PARAM_LIST?
 TYPE = "int" | "char"
-ID = [A-Za-z_][A-Za-z0-9_]*
-COMPOUND_STMT = "{" (STMT | COMPOUND_STMT)* "}"
+ID = /[A-Za-z_][A-Za-z0-9_]*/
+PARAM_LIST = "(" ("" | DECL ("," DECL)*) ")"
+BLOCK = "{" (STMT | BLOCK)* "}"
 STMT = EXPR ";"
 EXPR = <blank>

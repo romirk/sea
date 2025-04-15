@@ -1,14 +1,15 @@
 #[derive(Debug)]
 pub struct Program {
-    pub declarations: Vec<Declaration>,
+    pub declarations: Vec<DeclStmt>,
 }
 
 impl Program {
-    pub fn parse(mut input: &str) -> Result<(Self), ParseError> {
+    pub fn parse(mut input: &str) -> Result<Self, ParseError> {
+        input = input.trim_ascii_start();
         let mut declarations = Vec::new();
         while !input.is_empty() {
             let declaration;
-            (declaration, input) = Declaration::parse(input)?;
+            (declaration, input) = DeclStmt::parse(input)?;
             declarations.push(declaration);
         }
         Ok(Self { declarations })
@@ -16,41 +17,95 @@ impl Program {
 }
 
 #[derive(Debug)]
-pub struct Declaration {
-    pub type_: Type,
-    pub id: Id,
-    pub body: Option<CompoundStmt>,
+pub struct DeclStmt {
+    // pub type_: Type,
+    // pub id: Id,
+    // pub body: Option<CompoundStmt>,
+    pub decl: Decl,
+    pub body: Option<Block>,
 }
 
-impl Declaration {
+impl DeclStmt {
     pub fn parse(mut input: &str) -> Result<(Self, &str), ParseError> {
-        let (type_, id, body);
-        (type_, input) = Type::parse(input)?;
-        (id, input) = Id::parse(input)?;
+        let (decl, body);
+        (decl, input) = Decl::parse(input)?;
 
         if let Some(tail) = input.strip_prefix(";") {
             input = tail.trim_ascii_start();
-            return Ok((
-                Self {
-                    type_,
-                    id,
-                    body: None,
-                },
-                input,
-            ));
+            return Ok((Self { decl, body: None }, input));
         }
 
-        // TODO param list for function decls
-
-        (body, input) = CompoundStmt::parse(input)?;
+        (body, input) = Block::parse(input)?;
         Ok((
             Self {
-                type_,
-                id,
+                decl,
                 body: Some(body),
             },
             input,
         ))
+    }
+}
+
+#[derive(Debug)]
+pub struct Decl {
+    pub type_: Type,
+    pub id: Id,
+    pub param_list: Option<ParamList>,
+}
+
+impl Decl {
+    pub fn parse(mut input: &str) -> Result<(Self, &str), ParseError> {
+        let (type_, id, param_list);
+        (type_, input) = Type::parse(input)?;
+        (id, input) = Id::parse(input)?;
+
+        if input.starts_with("(") {
+            (param_list, input) = ParamList::parse(input)?;
+            Ok((
+                Self {
+                    type_,
+                    id,
+                    param_list: Some(param_list),
+                },
+                input,
+            ))
+        } else {
+            Ok((
+                Self {
+                    type_,
+                    id,
+                    param_list: None,
+                },
+                input,
+            ))
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct ParamList {
+    params: Vec<Decl>,
+}
+
+impl ParamList {
+    pub fn parse(mut input: &str) -> Result<(Self, &str), ParseError> {
+        let mut params = Vec::new();
+        input = input
+            .strip_prefix("(")
+            .ok_or(ParseError)?
+            .trim_ascii_start();
+
+        loop {
+            if let Some(tail) = input.strip_prefix(")") {
+                input = tail.trim_ascii_start();
+                break;
+            }
+
+            let decl;
+            (decl, input) = Decl::parse(input)?;
+            params.push(decl);
+        }
+        Ok((Self { params }, input))
     }
 }
 
@@ -110,14 +165,17 @@ impl Id {
 }
 
 #[derive(Debug)]
-pub struct CompoundStmt {
+pub struct Block {
     pub stmts: Vec<MaybeCompoundStmt>,
 }
 
-impl CompoundStmt {
+impl Block {
     pub fn parse(mut input: &str) -> Result<(Self, &str), ParseError> {
         let mut stmts = Vec::new();
-        input = input.strip_prefix("{").ok_or(ParseError)?.trim_ascii_start();
+        input = input
+            .strip_prefix("{")
+            .ok_or(ParseError)?
+            .trim_ascii_start();
 
         loop {
             if let Some(tail) = input.strip_prefix("}") {
@@ -136,12 +194,15 @@ impl CompoundStmt {
 #[derive(Debug)]
 pub enum MaybeCompoundStmt {
     Stmt(Stmt),
-    CompoundStmt(CompoundStmt),
+    CompoundStmt(Block),
 }
 
 impl MaybeCompoundStmt {
     pub fn parse(mut input: &str) -> Result<(Self, &str), ParseError> {
-        input = input.strip_prefix(";").ok_or(ParseError)?.trim_ascii_start();
+        input = input
+            .strip_prefix(";")
+            .ok_or(ParseError)?
+            .trim_ascii_start();
         Ok((Self::Stmt(Stmt::Expr(Expr {})), input))
     }
 }

@@ -1,5 +1,7 @@
 int foo;
 
-char bar {
+int baz(int x);
+
+char bar(int c) {
     ;
 }
