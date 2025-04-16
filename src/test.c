@@ -1,3 +1,5 @@
 char bar(int c) {
-    do while (expr); while (expr);       
+;;;;;
+    ;;do while (expr); while (expr);;;;;;;
+    ;
 }

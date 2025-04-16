@@ -42,6 +42,8 @@ impl BlockStmt {
 
             let stmt;
             (stmt, input) = Stmt::parse(input)?;
+            // ignore empty statements -- they have no effect on blocks
+            if let Stmt::Empty = stmt {continue}
             stmts.push(stmt);
         }
         Ok((Self { stmts }, input))

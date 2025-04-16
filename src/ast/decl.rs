@@ -1,10 +1,10 @@
 use crate::ast::err::ParseError;
-use crate::ast::stmt::Stmt;
+use crate::ast::stmt::{BlockStmt, Stmt};
 
 #[derive(Debug)]
 pub struct DeclStmt {
     pub decl: Decl,
-    pub body: Option<Stmt>,
+    pub body: Option<Vec<Stmt>>,
 }
 
 impl DeclStmt {
@@ -17,11 +17,11 @@ impl DeclStmt {
             return Ok((Self { decl, body: None }, input));
         }
 
-        (body, input) = Stmt::parse(input)?;
+        (body, input) = BlockStmt::parse(input)?;
         Ok((
             Self {
                 decl,
-                body: Some(body),
+                body: Some(body.stmts),
             },
             input,
         ))
