@@ -1,6 +1,10 @@
 use crate::ast::err::ParseError;
 use crate::ast::stmt::{BlockStmt, Stmt};
 
+/// AST node representing a declaration statement
+///
+/// This AST does not distinguish between declarations and definitions; a definition is simply a 
+/// declaration with `Some(body)`
 #[derive(Debug)]
 pub struct DeclStmt {
     pub decl: Decl,
@@ -12,11 +16,13 @@ impl DeclStmt {
         let (decl, body);
         (decl, input) = Decl::parse(input)?;
 
+        // if we see a `;`, this is a declaration statement
         if let Some(tail) = input.strip_prefix(";") {
             input = tail.trim_ascii_start();
             return Ok((Self { decl, body: None }, input));
         }
 
+        // the only other scenario is a definition, so we try to parse a block
         (body, input) = BlockStmt::parse(input)?;
         Ok((
             Self {
@@ -28,6 +34,9 @@ impl DeclStmt {
     }
 }
 
+/// AST node representing a declaration
+/// 
+/// A declaration consists of a type, identifier, and an optional paramater list.
 #[derive(Debug)]
 pub struct Decl {
     pub type_: Type,
