@@ -1,28 +1,10 @@
-#[derive(Debug)]
-pub struct Program {
-    pub declarations: Vec<DeclStmt>,
-}
-
-impl Program {
-    pub fn parse(mut input: &str) -> Result<Self, ParseError> {
-        input = input.trim_ascii_start();
-        let mut declarations = Vec::new();
-        while !input.is_empty() {
-            let declaration;
-            (declaration, input) = DeclStmt::parse(input)?;
-            declarations.push(declaration);
-        }
-        Ok(Self { declarations })
-    }
-}
+use crate::ast::err::ParseError;
+use crate::ast::stmt::Stmt;
 
 #[derive(Debug)]
 pub struct DeclStmt {
-    // pub type_: Type,
-    // pub id: Id,
-    // pub body: Option<CompoundStmt>,
     pub decl: Decl,
-    pub body: Option<Block>,
+    pub body: Option<Stmt>,
 }
 
 impl DeclStmt {
@@ -35,7 +17,7 @@ impl DeclStmt {
             return Ok((Self { decl, body: None }, input));
         }
 
-        (body, input) = Block::parse(input)?;
+        (body, input) = Stmt::parse(input)?;
         Ok((
             Self {
                 decl,
@@ -163,71 +145,3 @@ impl Id {
         Ok((this, rest.trim_ascii_start()))
     }
 }
-
-#[derive(Debug)]
-pub struct Block {
-    pub stmts: Vec<MaybeCompoundStmt>,
-}
-
-impl Block {
-    pub fn parse(mut input: &str) -> Result<(Self, &str), ParseError> {
-        let mut stmts = Vec::new();
-        input = input
-            .strip_prefix("{")
-            .ok_or(ParseError)?
-            .trim_ascii_start();
-
-        loop {
-            if let Some(tail) = input.strip_prefix("}") {
-                input = tail.trim_ascii_start();
-                break;
-            }
-
-            let stmt;
-            (stmt, input) = MaybeCompoundStmt::parse(input)?;
-            stmts.push(stmt);
-        }
-        Ok((Self { stmts }, input))
-    }
-}
-
-#[derive(Debug)]
-pub enum MaybeCompoundStmt {
-    Stmt(Stmt),
-    CompoundStmt(Block),
-}
-
-impl MaybeCompoundStmt {
-    pub fn parse(mut input: &str) -> Result<(Self, &str), ParseError> {
-        input = input
-            .strip_prefix(";")
-            .ok_or(ParseError)?
-            .trim_ascii_start();
-        Ok((Self::Stmt(Stmt::Expr(Expr {})), input))
-    }
-}
-
-#[derive(Debug)]
-pub enum Stmt {
-    Expr(Expr),
-    Nothing,
-}
-
-impl Stmt {
-    pub fn parse(input: &str) -> Result<Self, ParseError> {
-        todo!()
-    }
-}
-
-#[derive(Debug)]
-pub struct Expr {}
-
-impl Expr {
-    pub fn parse(input: &str) -> Result<Self, ParseError> {
-        todo!()
-    }
-}
-
-/// Parsing failed.
-#[derive(Debug)]
-pub struct ParseError;
