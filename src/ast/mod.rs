@@ -1,4 +1,4 @@
-use decl::DeclStmt;
+use decl::GlobalDecl;
 use err::ParseError;
 
 mod decl;
@@ -12,7 +12,7 @@ mod expr;
 #[derive(Debug)]
 pub struct Program {
     
-    pub declarations: Vec<DeclStmt>,
+    pub declarations: Vec<GlobalDecl>,
 }
 
 impl Program {
@@ -25,7 +25,8 @@ impl Program {
         // process the entire file
         while !input.is_empty() {
             let declaration;
-            (declaration, input) = DeclStmt::parse(input)?;
+            (declaration, input) = GlobalDecl::parse(input)?;
+            if let GlobalDecl::Empty = declaration { continue; }
             declarations.push(declaration);
         }
         Ok(Self { declarations })

@@ -1,9 +1,40 @@
 use crate::ast::err::ParseError;
 use crate::ast::stmt::{BlockStmt, Stmt};
 
+#[derive(Debug)]
+pub enum GlobalDecl {
+    Decl(DeclStmt),
+    Typedef(TypedefStmt),
+    Empty,
+}
+
+impl GlobalDecl {
+    pub fn parse(mut input: &str) -> Result<(Self, &str), ParseError> {
+        // empty
+        if let Some(tail) = input.strip_prefix(";") {
+            input = tail.trim_ascii_start();
+            return Ok((Self::Empty, input));
+        }
+
+        // decl
+        if let Ok((stmt, tail)) = DeclStmt::parse(input) {
+            input = tail.trim_ascii_start();
+            return Ok((Self::Decl(stmt), input));
+        }
+
+        // typedef
+        if let Ok((stmt, tail)) = TypedefStmt::parse(input) {
+            input = tail.trim_ascii_start();
+            return Ok((Self::Typedef(stmt), input));
+        }
+
+        Err(ParseError)
+    }
+}
+
 /// AST node representing a declaration statement
 ///
-/// This AST does not distinguish between declarations and definitions; a definition is simply a 
+/// This AST does not distinguish between declarations and definitions; a definition is simply a
 /// declaration with `Some(body)`
 #[derive(Debug)]
 pub struct DeclStmt {
@@ -34,8 +65,27 @@ impl DeclStmt {
     }
 }
 
+#[derive(Debug)]
+pub struct TypedefStmt {
+    pub type_: Type,
+    pub alias: Id,
+}
+
+impl TypedefStmt {
+    pub fn parse(mut input: &str) -> Result<(Self, &str), ParseError> {
+        input = input
+            .strip_prefix("typedef")
+            .ok_or(ParseError)?
+            .trim_ascii_start();
+        let (type_, alias);
+        (type_, input) = Type::parse(input)?;
+        (alias, input) = Id::parse(input)?;
+        Ok((Self { type_, alias }, input))
+    }
+}
+
 /// AST node representing a declaration
-/// 
+///
 /// A declaration consists of a type, identifier, and an optional paramater list.
 #[derive(Debug)]
 pub struct Decl {
