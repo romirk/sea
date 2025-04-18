@@ -1,3 +1,4 @@
+use crate::ast::decl::DeclStmt;
 use crate::ast::err::ParseError;
 use crate::ast::expr::Expr;
 
@@ -9,6 +10,7 @@ pub enum Stmt {
     DoWhile(DoWhileStmt),
     For(ForStmt),
     If(IfStmt),
+    Decl(DeclStmt),
 }
 
 impl Stmt {
@@ -43,6 +45,16 @@ impl Stmt {
         if let Ok((stmt, tail)) = IfStmt::parse(input) {
             return Ok((Self::If(stmt), tail));
         }
+        
+        // decl
+        if let Ok((stmt, tail)) = DeclStmt::parse(input) {
+            // disallow function declarations in statements
+            if stmt.body.is_some() {
+                return Err(ParseError);
+            }
+            return Ok((Self::Decl(stmt), tail));
+        }
+        
         Err(ParseError)
     }
 }
