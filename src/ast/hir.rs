@@ -1,4 +1,5 @@
-use crate::ast::decl::{Decl, DeclStmt, GlobalDecl, Id, ParamList, Type, TypedefStmt};
+use crate::ast::decl::{Id, Type};
+use crate::ast::decl_old::{Decl, DeclStmt, GlobalDecl, ParamList, TypedefStmt};
 use crate::ast::err::ParseError;
 use crate::ast::expr::Expr;
 use crate::ast::stmt::{BlockStmt, DoWhileStmt, ForStmt, IfStmt, Stmt, WhileCond, WhileStmt};

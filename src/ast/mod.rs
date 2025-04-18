@@ -1,9 +1,10 @@
-use decl::GlobalDecl;
-mod decl;
+use decl_old::GlobalDecl;
+mod decl_old;
 mod err;
 mod expr;
 mod hir;
 mod stmt;
+mod decl;
 
 /// Root level of the AST
 ///

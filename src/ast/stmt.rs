@@ -1,4 +1,5 @@
-use crate::ast::decl::{DeclStmt, Id};
+use crate::ast::decl::Id;
+use crate::ast::decl_old::DeclStmt;
 use crate::ast::expr::Expr;
 
 #[derive(Debug)]
