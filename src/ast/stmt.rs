@@ -5,6 +5,9 @@ use crate::ast::expr::Expr;
 #[derive(Debug)]
 pub enum Stmt {
     Empty,
+    Break,
+    Continue,
+    Return(Option<Expr>),
     Block(Vec<Stmt>),
     While(WhileStmt),
     DoWhile(DoWhileStmt),
@@ -19,6 +22,33 @@ impl Stmt {
         if let Some(tail) = input.strip_prefix(";") {
             input = tail.trim_ascii_start();
             return Ok((Self::Empty, input));
+        }
+
+        // break
+        if let Some(tail) = input.strip_prefix("break") {
+            input = tail.strip_prefix(";").ok_or(ParseError)?.trim_ascii_start();
+            return Ok((Self::Break, input));
+        }
+
+        // continue
+        if let Some(tail) = input.strip_prefix("continue") {
+            input = tail.strip_prefix(";").ok_or(ParseError)?.trim_ascii_start();
+            return Ok((Self::Continue, input));
+        }
+
+        // return
+        if let Some(tail) = input.strip_prefix("return") {
+            let ret;
+            input = tail.trim_ascii_start();
+            if !input.starts_with(";") {
+                let retval;
+                (retval, input) = Expr::parse(input.trim_ascii_start())?;
+                ret = Some(retval);
+            } else {
+                ret = None;
+            }
+            input = input.strip_prefix(";").ok_or(ParseError)?.trim_ascii_start();
+            return Ok((Self::Return(ret), input));
         }
 
         // block
@@ -45,7 +75,7 @@ impl Stmt {
         if let Ok((stmt, tail)) = IfStmt::parse(input) {
             return Ok((Self::If(stmt), tail));
         }
-        
+
         // decl
         if let Ok((stmt, tail)) = DeclStmt::parse(input) {
             // disallow function declarations in statements
@@ -54,7 +84,7 @@ impl Stmt {
             }
             return Ok((Self::Decl(stmt), tail));
         }
-        
+
         Err(ParseError)
     }
 }
