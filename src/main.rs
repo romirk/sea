@@ -2,6 +2,7 @@ use std::error::Error;
 use std::{env::args_os, path::PathBuf};
 
 mod ast;
+mod lexer;
 
 fn main() -> Result<(), Box<dyn Error>> {
     // The path to the source file.
