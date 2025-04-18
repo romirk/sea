@@ -11,6 +11,7 @@ EMPTY_STMT = ";"
 WHILE_STMT = WHILE_COND STMT
 WHILE_COND = "while" "(" EXPR ")"
 DO_WHILE_STMT = "do" STMT WHILE_COND ";"
+FOR_STMT = "for" "(" EXPR? ";" EXPR? ";" EXPR? ")" STMT
 EXPR_STMT = EXPR ";"
 EXPR = <blank>
 TYPEDEF_STMT = "typedef" TYPE ID ";"

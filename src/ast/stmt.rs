@@ -1,26 +1,47 @@
 use crate::ast::err::ParseError;
 use crate::ast::expr::Expr;
 
-// #[derive(Debug)]
-// pub enum StmtOrBlock {
-//     Stmt(Stmt),
-//     Block(Block),
-// }
-//
-// impl StmtOrBlock {
-//     pub fn parse(mut input: &str) -> Result<(Self, &str), ParseError> {
-//         if input.starts_with("{") {
-//             // this is a block
-//             let block;
-//             (block, input) = Block::parse(input)?;
-//             Ok((Self::Block(block), input))
-//         } else {
-//             let stmt;
-//             (stmt, input) = Stmt::parse(input)?;
-//             Ok((Self::Stmt(stmt), input))
-//         }
-//     }
-// }
+#[derive(Debug)]
+pub enum Stmt {
+    Empty,
+    Block(Vec<Stmt>),
+    While(WhileStmt),
+    DoWhile(DoWhileStmt),
+    For(ForStmt),
+}
+
+impl Stmt {
+    pub fn parse(mut input: &str) -> Result<(Self, &str), ParseError> {
+        // empty
+        if let Some(tail) = input.strip_prefix(";") {
+            input = tail.trim_ascii_start();
+            return Ok((Self::Empty, input));
+        }
+
+        // block
+        if let Ok((stmt, input)) = BlockStmt::parse(input) {
+            return Ok((Self::Block(stmt.stmts), input));
+        }
+
+        // while
+        if let Ok((stmt, tail)) = WhileStmt::parse(input) {
+            return Ok((Self::While(stmt), tail));
+        }
+
+        // do while
+        if let Ok((stmt, tail)) = DoWhileStmt::parse(input) {
+            return Ok((Self::DoWhile(stmt), tail));
+        }
+
+        // for
+        if let Ok((stmt, tail)) = ForStmt::parse(input) {
+            return Ok((Self::For(stmt), tail));
+        }
+
+        Err(ParseError)
+    }
+}
+
 #[derive(Debug)]
 pub struct BlockStmt {
     pub stmts: Vec<Stmt>,
@@ -43,49 +64,12 @@ impl BlockStmt {
             let stmt;
             (stmt, input) = Stmt::parse(input)?;
             // ignore empty statements -- they have no effect on blocks
-            if let Stmt::Empty = stmt {continue}
+            if let Stmt::Empty = stmt {
+                continue;
+            }
             stmts.push(stmt);
         }
         Ok((Self { stmts }, input))
-    }
-}
-
-#[derive(Debug)]
-pub enum Stmt {
-    Empty,
-    Block(Vec<Stmt>),
-    While(WhileStmt),
-    DoWhile(DoWhileStmt),
-}
-
-impl Stmt {
-    pub fn parse(mut input: &str) -> Result<(Self, &str), ParseError> {
-        // empty
-        if let Some(tail) = input.strip_prefix(";") {
-            input = tail.trim_ascii_start();
-            return Ok((Self::Empty, input));
-        }
-
-        // block
-        if input.starts_with("{") {
-            let block;
-            (block, input) = BlockStmt::parse(input)?;
-            return Ok((Self::Block(block.stmts), input));
-        }
-
-        // while
-        if let Ok((stmt, tail)) = WhileStmt::parse(input) {
-            input = tail.trim_ascii_start();
-            return Ok((Self::While(stmt), input));
-        }
-        
-        // do while
-        if let Ok((stmt, tail)) = DoWhileStmt::parse(input) {
-            input = tail.trim_ascii_start();
-            return Ok((Self::DoWhile(stmt), input));
-        }
-
-        Err(ParseError)
     }
 }
 
@@ -119,13 +103,25 @@ pub struct DoWhileStmt {
 impl DoWhileStmt {
     pub fn parse(mut input: &str) -> Result<(Self, &str), ParseError> {
         let (cond, body);
-        
-        input = input.strip_prefix("do").ok_or(ParseError)?.trim_ascii_start();
+
+        input = input
+            .strip_prefix("do")
+            .ok_or(ParseError)?
+            .trim_ascii_start();
         (body, input) = Stmt::parse(input)?;
         (cond, input) = WhileCond::parse(input)?;
-        input = input.strip_prefix(";").ok_or(ParseError)?.trim_ascii_start();
-        
-        Ok((Self { cond: cond.cond, body: Box::new(body) }, input))
+        input = input
+            .strip_prefix(";")
+            .ok_or(ParseError)?
+            .trim_ascii_start();
+
+        Ok((
+            Self {
+                cond: cond.cond,
+                body: Box::new(body),
+            },
+            input,
+        ))
     }
 }
 
@@ -153,5 +149,73 @@ impl WhileCond {
             .trim_ascii_start();
 
         Ok((Self { cond: expr }, input))
+    }
+}
+
+#[derive(Debug)]
+pub struct ForStmt {
+    pub init: Option<Expr>,
+    pub cond: Option<Expr>,
+    pub step: Option<Expr>,
+    pub body: Box<Stmt>,
+}
+
+impl ForStmt {
+    pub fn parse(mut input: &str) -> Result<(Self, &str), ParseError> {
+        input = input
+            .strip_prefix("for")
+            .ok_or(ParseError)?
+            .trim_ascii_start()
+            .strip_prefix("(")
+            .ok_or(ParseError)?
+            .trim_ascii_start();
+
+        let (mut init, mut cond, mut step) = (None, None, None);
+
+        if !input.starts_with(";") {
+            let init_expr;
+            (init_expr, input) = Expr::parse(input)?;
+            init = Some(init_expr);
+        }
+
+        input = input
+            .strip_prefix(";")
+            .ok_or(ParseError)?
+            .trim_ascii_start();
+
+        if !input.starts_with(";") {
+            let cond_expr;
+            (cond_expr, input) = Expr::parse(input)?;
+            cond = Some(cond_expr);
+        }
+
+        input = input
+            .strip_prefix(";")
+            .ok_or(ParseError)?
+            .trim_ascii_start();
+
+        if !input.starts_with(")") {
+            let step_expr;
+            (step_expr, input) = Expr::parse(input)?;
+            step = Some(step_expr);
+        }
+
+        input = input
+            .strip_prefix(")")
+            .ok_or(ParseError)?
+            .trim_ascii_start();
+
+        let body;
+        (body, input) = Stmt::parse(input)?;
+
+        Ok((
+            Self {
+                init,
+                cond,
+                step,
+                body: Box::new(body),
+            },
+            input,
+        ))
     }
 }
