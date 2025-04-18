@@ -8,6 +8,7 @@ pub enum Stmt {
     While(WhileStmt),
     DoWhile(DoWhileStmt),
     For(ForStmt),
+    If(IfStmt),
 }
 
 impl Stmt {
@@ -38,6 +39,10 @@ impl Stmt {
             return Ok((Self::For(stmt), tail));
         }
 
+        // if
+        if let Ok((stmt, tail)) = IfStmt::parse(input) {
+            return Ok((Self::If(stmt), tail));
+        }
         Err(ParseError)
     }
 }
@@ -214,6 +219,62 @@ impl ForStmt {
                 cond,
                 step,
                 body: Box::new(body),
+            },
+            input,
+        ))
+    }
+}
+
+#[derive(Debug)]
+pub struct IfStmt {
+    pub cond: Expr,
+    pub then_branch: Box<Stmt>,
+    pub else_branch: Option<Box<Stmt>>,
+}
+
+impl IfStmt {
+    pub fn parse(mut input: &str) -> Result<(Self, &str), ParseError> {
+        input = input
+            .strip_prefix("if")
+            .ok_or(ParseError)?
+            .trim_ascii_start()
+            .strip_prefix("(")
+            .ok_or(ParseError)?
+            .trim_ascii_start();
+
+        let cond;
+        (cond, input) = Expr::parse(input)?;
+
+        input = input
+            .strip_prefix(")")
+            .ok_or(ParseError)?
+            .trim_ascii_start();
+
+        let then_branch;
+        (then_branch, input) = Stmt::parse(input)?;
+
+        if input.starts_with("else") {
+            input = input
+                .strip_prefix("else")
+                .ok_or(ParseError)?
+                .trim_ascii_start();
+            let else_branch;
+            (else_branch, input) = Stmt::parse(input)?;
+            return Ok((
+                Self {
+                    cond,
+                    then_branch: Box::new(then_branch),
+                    else_branch: Some(Box::new(else_branch)),
+                },
+                input,
+            ));
+        }
+
+        Ok((
+            Self {
+                cond,
+                then_branch: Box::new(then_branch),
+                else_branch: None,
             },
             input,
         ))
