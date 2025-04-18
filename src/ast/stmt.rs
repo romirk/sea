@@ -1,4 +1,4 @@
-use crate::ast::decl::DeclStmt;
+use crate::ast::decl::{DeclStmt, Id};
 use crate::ast::err::ParseError;
 use crate::ast::expr::Expr;
 
@@ -7,6 +7,7 @@ pub enum Stmt {
     Empty,
     Break,
     Continue,
+    Goto(Id),
     Return(Option<Expr>),
     Block(Vec<Stmt>),
     While(WhileStmt),
@@ -20,26 +21,26 @@ impl Stmt {
     pub fn parse(mut input: &str) -> Result<(Self, &str), ParseError> {
         // empty
         if let Some(tail) = input.strip_prefix(";") {
-            input = tail.trim_ascii_start();
-            return Ok((Self::Empty, input));
+            return Ok((Self::Empty, tail.trim_ascii_start()));
         }
 
         // break
         if let Some(tail) = input.strip_prefix("break") {
-            input = tail.strip_prefix(";").ok_or(ParseError)?.trim_ascii_start();
+            input = tail.trim_ascii_start().strip_prefix(";").ok_or(ParseError)?.trim_ascii_start();
             return Ok((Self::Break, input));
         }
 
         // continue
         if let Some(tail) = input.strip_prefix("continue") {
-            input = tail.strip_prefix(";").ok_or(ParseError)?.trim_ascii_start();
+            input = tail.trim_ascii_start().strip_prefix(";").ok_or(ParseError)?.trim_ascii_start();
             return Ok((Self::Continue, input));
         }
 
         // return
         if let Some(tail) = input.strip_prefix("return") {
-            let ret;
             input = tail.trim_ascii_start();
+            
+            let ret;
             if !input.starts_with(";") {
                 let retval;
                 (retval, input) = Expr::parse(input.trim_ascii_start())?;
@@ -49,6 +50,15 @@ impl Stmt {
             }
             input = input.strip_prefix(";").ok_or(ParseError)?.trim_ascii_start();
             return Ok((Self::Return(ret), input));
+        }
+        
+        // goto
+        if let Some(tail) = input.strip_prefix("goto") {
+            input = tail.trim_ascii_start();
+            let label;
+            (label, input) = Id::parse(input)?;
+            input = input.strip_prefix(";").ok_or(ParseError)?.trim_ascii_start();
+            return Ok((Self::Goto(label), input));
         }
 
         // block

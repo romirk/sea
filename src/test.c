@@ -7,6 +7,7 @@ char bar(int c) {
         else do 
             char c;
         while (expr);
+        goto label;
     }
     return expr;
 }

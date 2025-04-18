@@ -15,4 +15,5 @@ FOR_STMT = "for" "(" EXPR? ";" EXPR? ";" EXPR? ")" STMT
 IF_STMT = "if" "(" EXPR ")" STMT ("else" STMT)?
 EXPR_STMT = EXPR ";"
 EXPR = "expr"
+LABELLED_STMT = ID ":" STMT
 TYPEDEF_STMT = "typedef" TYPE ID ";"
