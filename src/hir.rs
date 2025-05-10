@@ -3,16 +3,19 @@
 /// A C program (technically a "translation unit").
 pub struct Program {
     /// The top-level declarations and definitions in the program.
-    pub decls: Vec<Defn>,
+    pub decls: Vec<TopDefn>,
 }
 
-/// A declaration or definition.
-pub enum Defn {
+/// A top-level declaration or definition.
+pub enum TopDefn {
     /// A function declaration or definition.
     Fn(FnDefn),
 
     /// A variable declaration or definition.
     Var(VarDefn),
+
+    /// A type definition.
+    Type(TypeDefn),
 }
 
 /// A function declaration or definition.
@@ -43,6 +46,18 @@ pub struct VarDefn {
 
     /// The bindings in the declaration, with optional definitions.
     pub bindings: Vec<(Binding, Option<Expr>)>,
+}
+
+/// A type definition.
+pub struct TypeDefn {
+    /// Attributes on the function.
+    pub attrs: (), // TODO
+
+    /// The base type of the declaration.
+    pub base: Type,
+
+    /// The type bindings in the declaration.
+    pub bindings: Vec<Binding>,
 }
 
 /// A declaration.
@@ -190,8 +205,11 @@ pub enum Stmt {
     /// A block.
     Block(Block),
 
-    /// A declaration.
-    Decl(Decl),
+    /// A variable declaration/definition.
+    VarDefn(VarDefn),
+
+    /// A type definition.
+    Type(TypeDefn),
 
     /// An expression.
     Expr(Expr),
