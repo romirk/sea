@@ -4,6 +4,7 @@ use std::{env::args_os, path::PathBuf};
 mod ast;
 mod hir;
 mod lexer;
+mod parser;
 
 fn main() -> Result<(), Box<dyn Error>> {
     // The path to the source file.
