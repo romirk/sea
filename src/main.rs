@@ -1,5 +1,7 @@
 use std::error::Error;
 use std::{env::args_os, path::PathBuf};
+use hir::Stmt;
+use crate::lexer::{Lexer, LexerContext};
 
 mod ast;
 mod hir;
@@ -24,6 +26,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         std::process::exit(2)
     });
     println!("Parsed to: {program:#?}");
+    
+    let mut ctx = LexerContext::new(&contents);
+    let lexer = ctx.start();
+    
+    Stmt::parse(lexer).unwrap();
 
     Ok(())
 }

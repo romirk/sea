@@ -200,7 +200,7 @@ pub struct Block {
 /// A statement.
 pub enum Stmt {
     /// A standalone semicolon.
-    Semi,
+    Empty,
 
     /// A block.
     Block(Block),
@@ -264,10 +264,17 @@ pub enum Stmt {
 
     /// A continue statement.
     Continue,
+
+    /// A return statement
+    Return { expr: Option<Expr> },
 }
 
 /// An expression.
 pub enum Expr {
+    /// A debug expression
+    /// Equivalent to reading `expr` in the source
+    Debug,
+
     /// A reference expression.
     Ref(Box<Expr>),
 
