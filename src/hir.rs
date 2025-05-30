@@ -203,7 +203,10 @@ pub enum Stmt {
     Empty,
 
     /// A block.
-    Block(Block),
+    Block {
+        /// The statements making up the block.
+        stmts: Vec<Stmt>,
+    },
 
     /// A variable declaration/definition.
     VarDefn(VarDefn),
@@ -228,14 +231,14 @@ pub enum Stmt {
 
     /// A for loop.
     For {
-        /// The initialization statement.
-        init: Box<Stmt>,
+        /// The initialization expression.
+        init: Option<Expr>,
 
         /// The loop condition, if any.
         cond: Option<Expr>,
 
         /// The repetition statement.
-        rept: Box<Stmt>,
+        rept: Option<Expr>,
 
         /// The loop body.
         body: Box<Stmt>,
