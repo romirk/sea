@@ -2,12 +2,16 @@ use crate::hir::Program;
 use crate::lexer::LexerContext;
 use crate::parser::Parseable;
 use std::error::Error;
+use std::fs::{read_to_string, File};
+use std::io::BufWriter;
+use std::io::Write;
 use std::{env::args_os, path::PathBuf};
 
 mod ast;
 mod hir;
 mod lexer;
 mod parser;
+mod dbg;
 
 fn main() -> Result<(), Box<dyn Error>> {
     // The path to the source file.
@@ -18,21 +22,18 @@ fn main() -> Result<(), Box<dyn Error>> {
             std::process::exit(1)
         })
         .into();
+    let out_path = path.with_extension("ast");
 
-    println!("Reading from {}", path.display());
-
-    let contents = std::fs::read_to_string(path)?;
-    // let program = ast::Program::parse(&contents).unwrap_or_else(|err| {
-    //     eprintln!("Failed to parse: {err:?}");
-    //     std::process::exit(2)
-    // });
-    // println!("Parsed to: {program:#?}");
+    let contents = read_to_string(path)?;
 
     let mut ctx = LexerContext::new(&contents);
     let mut lexer = ctx.start();
+    let program = Program::parse(lexer.delegate()).unwrap().into();
 
-    let result = Program::parse(lexer.delegate()).unwrap().into();
-    println!("Parsed to: {result:#?}");
+    let out_file = File::create(out_path)?;
+    let mut writer = BufWriter::new(out_file);
+
+    write!(&mut writer, "{:#?}", program).unwrap();
 
     Ok(())
 }

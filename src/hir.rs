@@ -20,7 +20,6 @@ pub struct Program {
 }
 
 /// A top-level declaration or definition.
-#[derive(Debug)]
 pub enum TopDefn {
     /// A function declaration or definition.
     Fn(FnDefn),
@@ -33,7 +32,6 @@ pub enum TopDefn {
 }
 
 /// A function declaration or definition.
-#[derive(Debug)]
 pub struct FnDefn {
     /// Attributes on the function.
     pub attrs: (), // TODO
@@ -52,7 +50,6 @@ pub struct FnDefn {
 }
 
 /// A variable declaration or definition.
-#[derive(Debug)]
 pub struct VarDefn {
     /// Attributes on the function.
     pub attrs: (), // TODO
@@ -65,7 +62,6 @@ pub struct VarDefn {
 }
 
 /// A type definition.
-#[derive(Debug)]
 pub struct TypeDefn {
     /// Attributes on the function.
     pub attrs: (), // TODO
@@ -78,7 +74,7 @@ pub struct TypeDefn {
 }
 
 /// A declaration.
-#[derive(Debug)]
+#[derive(Clone)]
 pub struct Decl {
     /// Attributes on the declaration.
     pub attrs: (), // TODO
@@ -91,7 +87,7 @@ pub struct Decl {
 }
 
 /// A declaration with a single binding.
-#[derive(Debug)]
+#[derive(Clone)]
 pub struct MonoDecl {
     /// Attributes on the declaration.
     pub attrs: (), // TODO
@@ -104,7 +100,7 @@ pub struct MonoDecl {
 }
 
 /// A binding.
-#[derive(Debug)]
+#[derive(Clone)]
 pub enum Binding {
     /// A function binding.
     Fn {
@@ -129,21 +125,13 @@ pub enum Binding {
     },
 
     /// A pointer binding.
-    Pointer {
-        /// The inner binding.
-        ///
-        /// This elaborates the element type.
-        inner: Box<Binding>,
-    },
+    Pointer(Box<Binding>),
 
     /// A parenthesized binding.
     Paren(Box<Binding>),
 
     /// A variable binding.
-    Ident {
-        /// The name of the binding.
-        name: String,
-    },
+    Ident(String),
 
     /// An anonymous binding.
     ///
@@ -152,7 +140,7 @@ pub enum Binding {
 }
 
 /// A type.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub enum Type {
     /// A void type.
     Void,
@@ -197,22 +185,19 @@ pub enum Type {
     LongDouble,
 
     /// A structure.
-    // Struct {
-    //     /// Attributes on the struct.
-    //     attrs: (), // TODO
-    //
-    //     /// The name of the struct, if specified.
-    //     name: Option<String>,
-    //
-    //     /// The fields of the struct.
-    //     fields: Vec<Decl>,
-    // },
+    Struct {
+        /// Attributes on the struct.
+        attrs: (), // TODO
+
+        /// The name of the struct, if specified.
+        name: Option<String>,
+
+        /// The fields of the struct.
+        fields: Vec<MonoDecl>,
+    },
 
     /// An identifier.
-    Ident {
-        /// The name of the type.
-        name: String,
-    },
+    Ident(String),
 }
 
 /// A block.
@@ -235,7 +220,7 @@ pub enum Stmt {
     },
 
     /// A variable declaration/definition.
-    Decl(Decl),
+    VarDefn(VarDefn),
 
     /// A type definition.
     Type(TypeDefn),
@@ -264,7 +249,7 @@ pub enum Stmt {
         cond: Option<Expr>,
 
         /// The repetition statement.
-        rept: Option<Expr>,
+        step: Option<Expr>,
 
         /// The loop body.
         body: Box<Stmt>,
@@ -295,14 +280,14 @@ pub enum Stmt {
     Continue,
 
     /// A return statement
-    Return { expr: Option<Expr> },
-    
+    Return(Option<Expr>),
+
     /// A goto statement
     Goto(String),
 }
 
 /// An expression.
-#[derive(Debug)]
+#[derive(Clone)]
 pub enum Expr {
     /// A debug expression
     /// Equivalent to reading `expr` in the source
@@ -322,7 +307,7 @@ pub enum Expr {
 }
 
 /// A binary operation.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum BinOp {
     /// Addition.
     Add,
@@ -332,7 +317,7 @@ pub enum BinOp {
 }
 
 /// A unary operation.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum UnaOp {
     /// Negation.
     Neg,

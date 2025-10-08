@@ -1,3 +1,4 @@
+use crate::hir::VarDefn;
 use crate::lexer::{Lexer, ParseResult};
 
 use super::hir::*;
@@ -8,6 +9,30 @@ pub trait Parseable {
 }
 impl Parseable for Type {
     fn parse(mut lexer: Lexer) -> ParseResult<Self> {
+        if lexer.keyword("struct").is_ok() {
+            let name = if let Ok(id_res) = lexer.ident() {
+                Some(id_res.to_string())
+            } else {
+                None
+            };
+            lexer.symbol("{")?;
+            let mut fields = Vec::new();
+            loop {
+                if lexer.symbol("}").is_ok() {
+                    break;
+                }
+                let member = MonoDecl::parse(lexer.delegate())?.into();
+                fields.push(member);
+                lexer.symbol(";")?;
+            }
+
+            return Ok(lexer.finish(Self::Struct {
+                attrs: (),
+                name,
+                fields,
+            }));
+        }
+
         for (std_type, concrete) in STD_TYPES.entries() {
             if lexer.keyword(std_type).is_ok() {
                 return Ok(lexer.finish(concrete.clone()));
@@ -16,7 +41,7 @@ impl Parseable for Type {
 
         // attempt to parse user-defined type or fail
         let name = lexer.ident()?.to_string();
-        Ok(lexer.finish(Self::Ident { name }))
+        Ok(lexer.finish(Self::Ident(name)))
     }
 }
 impl Parseable for Binding {
@@ -31,7 +56,7 @@ impl Parseable for Binding {
         if lexer.symbol("(").is_ok() {
             if lexer.symbol(")").is_ok() {
                 return Ok(lexer.finish(Self::Fn {
-                    inner: Box::new(Binding::Ident { name }),
+                    inner: Box::new(Binding::Ident(name)),
                     params: Default::default(),
                 }));
             }
@@ -45,11 +70,11 @@ impl Parseable for Binding {
                 lexer.symbol(",")?;
             }
             return Ok(lexer.finish(Self::Fn {
-                inner: Box::new(Binding::Ident { name }),
+                inner: Box::new(Binding::Ident(name)),
                 params,
             }));
         }
-        Ok(lexer.finish(Self::Ident { name }))
+        Ok(lexer.finish(Self::Ident(name)))
     }
 }
 
@@ -234,7 +259,7 @@ impl Parseable for Stmt {
         if lexer.keyword("return").is_ok() {
             let expr = Expr::parse(lexer.delegate()).ok().map(|e| e.into());
             lexer.symbol(";")?;
-            return Ok(lexer.finish(Self::Return { expr }));
+            return Ok(lexer.finish(Self::Return(expr)));
         }
 
         // if
@@ -280,20 +305,20 @@ impl Parseable for Stmt {
             lexer.symbol(";")?;
             let cond = Expr::parse(lexer.delegate()).ok().map(|e| e.into());
             lexer.symbol(";")?;
-            let rept = Expr::parse(lexer.delegate()).ok().map(|e| e.into());
+            let step = Expr::parse(lexer.delegate()).ok().map(|e| e.into());
             lexer.symbol(")")?;
             let body = Box::new(Stmt::parse(lexer.delegate())?.into());
             return Ok(lexer.finish(Self::For {
                 init,
                 cond,
-                rept,
+                step,
                 body,
             }));
         }
 
-        if let Ok(result) = Decl::parse(lexer.delegate()) {
+        if let Ok(result) = VarDefn::parse(lexer.delegate()) {
             let decl = result.into();
-            return Ok(lexer.finish(Self::Decl(decl)));
+            return Ok(lexer.finish(Self::VarDefn(decl)));
         }
 
         todo!()
