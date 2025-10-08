@@ -13,12 +13,14 @@ pub const STD_TYPES: phf::Map<&'static str, Type> = phf_map! {
 };
 
 /// A C program (technically a "translation unit").
+#[derive(Debug)]
 pub struct Program {
     /// The top-level declarations and definitions in the program.
     pub decls: Vec<TopDefn>,
 }
 
 /// A top-level declaration or definition.
+#[derive(Debug)]
 pub enum TopDefn {
     /// A function declaration or definition.
     Fn(FnDefn),
@@ -31,12 +33,13 @@ pub enum TopDefn {
 }
 
 /// A function declaration or definition.
+#[derive(Debug)]
 pub struct FnDefn {
     /// Attributes on the function.
     pub attrs: (), // TODO
 
     /// The return type of the function.
-    pub rett: Type,
+    pub return_type: Type,
 
     /// The name of the function.
     pub name: String,
@@ -75,6 +78,7 @@ pub struct TypeDefn {
 }
 
 /// A declaration.
+#[derive(Debug)]
 pub struct Decl {
     /// Attributes on the declaration.
     pub attrs: (), // TODO
@@ -212,6 +216,7 @@ pub enum Type {
 }
 
 /// A block.
+#[derive(Debug)]
 pub struct Block {
     /// The statements making up the block.
     pub stmts: Vec<Stmt>,
@@ -230,7 +235,7 @@ pub enum Stmt {
     },
 
     /// A variable declaration/definition.
-    VarDefn(VarDefn),
+    Decl(Decl),
 
     /// A type definition.
     Type(TypeDefn),
@@ -291,6 +296,9 @@ pub enum Stmt {
 
     /// A return statement
     Return { expr: Option<Expr> },
+    
+    /// A goto statement
+    Goto(String),
 }
 
 /// An expression.

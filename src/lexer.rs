@@ -70,6 +70,10 @@ impl<'src, 'ctx> Lexer<'ctx, 'src> {
     pub fn input(&self) -> &'src str {
         &self.context.input[self.context.offset..]
     }
+    
+    pub fn remaining_chars(&self) -> usize {
+        self.input().len()
+    }
 
     /// Create a new [`Lexer`] from the current offset.
     pub fn delegate(&mut self) -> Lexer<'_, 'src> {
