@@ -1,5 +1,17 @@
 //! The High-Level Intermediate Representation.
 
+use phf::phf_map;
+use std::fmt::Debug;
+pub const STD_TYPES: phf::Map<&'static str, Type> = phf_map! {
+    "void" => Type::Void,
+    "char" => Type::Char { signed: None },
+    "short" => Type::Short { signed: None },
+    "int" => Type::Int { signed: None },
+    "long" => Type::Long { signed: None },
+    "float" => Type::Float,
+    "double" => Type::Double,
+};
+
 /// A C program (technically a "translation unit").
 pub struct Program {
     /// The top-level declarations and definitions in the program.
@@ -37,6 +49,7 @@ pub struct FnDefn {
 }
 
 /// A variable declaration or definition.
+#[derive(Debug)]
 pub struct VarDefn {
     /// Attributes on the function.
     pub attrs: (), // TODO
@@ -49,6 +62,7 @@ pub struct VarDefn {
 }
 
 /// A type definition.
+#[derive(Debug)]
 pub struct TypeDefn {
     /// Attributes on the function.
     pub attrs: (), // TODO
@@ -73,6 +87,7 @@ pub struct Decl {
 }
 
 /// A declaration with a single binding.
+#[derive(Debug)]
 pub struct MonoDecl {
     /// Attributes on the declaration.
     pub attrs: (), // TODO
@@ -85,6 +100,7 @@ pub struct MonoDecl {
 }
 
 /// A binding.
+#[derive(Debug)]
 pub enum Binding {
     /// A function binding.
     Fn {
@@ -132,7 +148,11 @@ pub enum Binding {
 }
 
 /// A type.
+#[derive(Clone, Debug)]
 pub enum Type {
+    /// A void type.
+    Void,
+
     /// A character type.
     Char {
         /// The signedness of the type, if explicit.
@@ -173,16 +193,16 @@ pub enum Type {
     LongDouble,
 
     /// A structure.
-    Struct {
-        /// Attributes on the struct.
-        attrs: (), // TODO
-
-        /// The name of the struct, if specified.
-        name: Option<String>,
-
-        /// The fields of the struct.
-        fields: Vec<Decl>,
-    },
+    // Struct {
+    //     /// Attributes on the struct.
+    //     attrs: (), // TODO
+    //
+    //     /// The name of the struct, if specified.
+    //     name: Option<String>,
+    //
+    //     /// The fields of the struct.
+    //     fields: Vec<Decl>,
+    // },
 
     /// An identifier.
     Ident {
@@ -198,6 +218,7 @@ pub struct Block {
 }
 
 /// A statement.
+#[derive(Debug)]
 pub enum Stmt {
     /// A standalone semicolon.
     Empty,
@@ -226,7 +247,7 @@ pub enum Stmt {
         then: Box<Stmt>,
 
         /// The failure case.
-        r#else: Box<Stmt>,
+        r#else: Option<Box<Stmt>>,
     },
 
     /// A for loop.
@@ -273,6 +294,7 @@ pub enum Stmt {
 }
 
 /// An expression.
+#[derive(Debug)]
 pub enum Expr {
     /// A debug expression
     /// Equivalent to reading `expr` in the source
@@ -292,6 +314,7 @@ pub enum Expr {
 }
 
 /// A binary operation.
+#[derive(Debug)]
 pub enum BinOp {
     /// Addition.
     Add,
@@ -301,6 +324,7 @@ pub enum BinOp {
 }
 
 /// A unary operation.
+#[derive(Debug)]
 pub enum UnaOp {
     /// Negation.
     Neg,

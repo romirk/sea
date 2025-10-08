@@ -1,10 +1,57 @@
 use crate::lexer::{Lexer, ParseResult};
 
 use super::hir::*;
+pub trait Parseable {
+    fn parse(lexer: Lexer) -> ParseResult<Self>
+    where
+        Self: std::marker::Sized;
+}
+impl Parseable for Type {
+    fn parse(mut lexer: Lexer) -> ParseResult<Self> {
+        for (std_type, concrete) in STD_TYPES.entries() {
+            if lexer.keyword(std_type).is_ok() {
+                return Ok(lexer.finish(concrete.clone()));
+            }
+        }
 
-impl Stmt {
+        // attempt to parse user-defined type or fail
+        let name = lexer.ident()?.to_string();
+        Ok(lexer.finish(Self::Ident { name }))
+    }
+}
+impl Parseable for Binding {
+    fn parse(mut lexer: Lexer) -> ParseResult<Self> {
+        if lexer.symbol("(").is_ok() {
+            let inner = Box::new(Binding::parse(lexer.delegate())?.into());
+            lexer.symbol(")")?;
+            return Ok(lexer.finish(Self::Paren(inner)));
+        }
+        if lexer.symbol("*").is_ok() {
+            let inner = Box::new(Binding::parse(lexer.delegate())?.into());
+            return Ok(lexer.finish(Self::Pointer { inner }));
+        }
+
+        let name = lexer.ident()?.to_string();
+        Ok(lexer.finish(Self::Ident { name }))
+    }
+}
+
+impl Parseable for MonoDecl {
+    fn parse(mut lexer: Lexer) -> ParseResult<Self> {
+        let base = Type::parse(lexer.delegate())?.into();
+        let binding = Binding::parse(lexer.delegate())?.into();
+        lexer.symbol(";")?;
+        Ok(lexer.finish(Self {
+            attrs: (),
+            base,
+            binding,
+        }))
+    }
+}
+
+impl Parseable for Stmt {
     /// Parse a [`Stmt`].
-    pub fn parse(mut lexer: Lexer<'_, '_>) -> ParseResult<Self> {
+    fn parse(mut lexer: Lexer) -> ParseResult<Self> {
         // empty
         if lexer.symbol(";").is_ok() {
             return Ok(lexer.finish(Self::Empty));
@@ -45,8 +92,13 @@ impl Stmt {
             let cond = Expr::parse(lexer.delegate())?.into();
             lexer.symbol(")")?;
             let then = Box::new(Stmt::parse(lexer.delegate())?.into());
-            lexer.keyword("else")?;
-            let r#else = Box::new(Stmt::parse(lexer.delegate())?.into());
+
+            let r#else = if lexer.keyword("else").is_ok() {
+                Some(Box::new(Stmt::parse(lexer.delegate())?.into()))
+            } else {
+                None
+            };
+
             return Ok(lexer.finish(Self::If { cond, then, r#else }));
         }
 
@@ -88,12 +140,20 @@ impl Stmt {
             }));
         }
 
+        if let Ok(result) = MonoDecl::parse(lexer.delegate()) {
+            let mono_decl = result.into();
+            return Ok(lexer.finish(Self::VarDefn(VarDefn {
+                attrs: (),
+                base: mono_decl.base,
+                bindings: vec![(mono_decl.binding, None)],
+            })));
+        }
         todo!()
     }
 }
 
-impl Expr {
-    pub fn parse(mut lexer: Lexer<'_, '_>) -> ParseResult<Self> {
+impl Parseable for Expr {
+    fn parse(mut lexer: Lexer) -> ParseResult<Self> {
         lexer.keyword("expr")?;
         Ok(lexer.finish(Self::Debug))
     }

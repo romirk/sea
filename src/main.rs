@@ -1,7 +1,8 @@
+use crate::lexer::LexerContext;
+use crate::parser::Parseable;
+use hir::Stmt;
 use std::error::Error;
 use std::{env::args_os, path::PathBuf};
-use hir::Stmt;
-use crate::lexer::{Lexer, LexerContext};
 
 mod ast;
 mod hir;
@@ -21,16 +22,17 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("Reading from {}", path.display());
 
     let contents = std::fs::read_to_string(path)?;
-    let program = ast::Program::parse(&contents).unwrap_or_else(|err| {
-        eprintln!("Failed to parse: {err:?}");
-        std::process::exit(2)
-    });
-    println!("Parsed to: {program:#?}");
+    // let program = ast::Program::parse(&contents).unwrap_or_else(|err| {
+    //     eprintln!("Failed to parse: {err:?}");
+    //     std::process::exit(2)
+    // });
+    // println!("Parsed to: {program:#?}");
     
     let mut ctx = LexerContext::new(&contents);
-    let lexer = ctx.start();
+    let mut lexer = ctx.start();
     
-    Stmt::parse(lexer).unwrap();
+    let result = Stmt::parse(lexer.delegate()).unwrap().into();
+    println!("Parsed to: {result:#?}");
 
     Ok(())
 }
