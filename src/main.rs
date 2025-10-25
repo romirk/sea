@@ -7,7 +7,6 @@ use std::io::BufWriter;
 use std::io::Write;
 use std::{env::args_os, path::PathBuf};
 
-mod ast;
 mod hir;
 mod lexer;
 mod parser;
